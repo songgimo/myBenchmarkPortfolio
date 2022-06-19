@@ -102,3 +102,6 @@ class CustomItemName:
     STOCK_NAME = '종목명'
     HIGHEST_PRICE = '상한가'
     OPENING_PRICE = '시가'
+    CURRENT_PRICE = '현재가'
+
+    NAME_LIST = [STOCK_NAME, HIGHEST_PRICE, OPENING_PRICE, CURRENT_PRICE]
