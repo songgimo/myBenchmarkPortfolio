@@ -105,3 +105,13 @@ class CustomItemName:
     CURRENT_PRICE = '현재가'
 
     NAME_LIST = [STOCK_NAME, HIGHEST_PRICE, OPENING_PRICE, CURRENT_PRICE]
+
+
+class Commands:
+    GET_STOCK_KOREAN_NAME = 'get_stock_korean_name'
+    GET_STOCK_OPENING_PRICE = 'get_stock_opening_price'
+    GET_STOCK_HIGHEST_PRICE = 'get_stock_highest_price'
+    GET_STOCK_CURRENT_PRICE = 'get_stock_current_price'
+
+    CONNECT_ALL_BLOCK = 'connect_all_block'
+    CONNECT_ALL_REAL = 'connect_all_real'

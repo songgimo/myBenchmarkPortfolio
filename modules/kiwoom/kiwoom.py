@@ -1,5 +1,6 @@
 import inspect
 import re
+from multiprocessing import Process
 
 from PyQt5.QtCore import QObject
 
@@ -42,17 +43,15 @@ class DynamicApis(object):
         return self._dynamic_call('GetRepeatCnt(QString, QString)', [tx_code, request_name])
 
     def get_stock_code_information(self, stock_code, item_name):
-        # request_name = self._create_request_name(stock_code, item_name)
-
         self.set_value(ValueName.STOCK_CODE, stock_code)
-        raw_data = self.request_common_data(item_name, OptCodes.STOCK_INFO, stock_code, IsRepeat.UNUSED)
+        self.request_common_data(item_name, OptCodes.STOCK_INFO, stock_code, IsRepeat.UNUSED)
 
-        data = re.sub(r'[^\d]', '', raw_data) if raw_data.is_numeric() else raw_data
+        raw_data = REDIS_SERVER.get(RedisKeys.TX_DATA)
 
-        return data
+        return re.sub(r'[^\d]', '', raw_data) if raw_data.is_numeric() else raw_data
 
 
-class KiwoomAPIModule(QObject):
+class KiwoomAPIModule(QObject, Process):
     def __init__(self, controller):
         super(KiwoomAPIModule, self).__init__()
 
@@ -61,11 +60,29 @@ class KiwoomAPIModule(QObject):
 
         self._receiver = Receiver(self._apis)
 
-    def connect_block_list(self):
-        pass
+    def run(self):
+        while True:
+            try:
+                command = REDIS_SERVER.get(RedisKeys.KIWOOM_API_KEY)
+            except:
+                # redis timeout
+                continue
 
-    def connect_real_list(self):
-        pass
+            fn = getattr(self, command)
+
+            result = fn()
+
+            REDIS_SERVER.set(RedisKeys.KIWOOM_RESULT_KEY, result)
+
+    def connect_all_block(self):
+        for name, fn in inspect.getmembers(self, inspect.ismethod):
+            if name.startswith('connect_block'):
+                fn()
+
+    def connect_all_real(self):
+        for name, fn in inspect.getmembers(self, inspect.ismethod):
+            if name.startswith('connect_real'):
+                fn()
 
     def connect_block_tx_data(self):
         self.OnReceiveTrData.connect(self._receiver.blocking.get_tx_data)
@@ -82,10 +99,10 @@ class KiwoomAPIModule(QObject):
     def get_stock_highest_price(self, stock_code):
         return self._apis.get_stock_code_information(stock_code, CustomItemName.HIGHEST_PRICE)
 
-    def get_opening_price(self, stock_code):
+    def get_stock_opening_price(self, stock_code):
         return self._apis.get_stock_code_information(stock_code, CustomItemName.OPENING_PRICE)
 
-    def get_current_price(self, stock_code):
+    def get_stock_current_price(self, stock_code):
         return self._apis.get_stock_code_information(stock_code, CustomItemName.CURRENT_PRICE)
 
 
@@ -105,7 +122,6 @@ class Receiver(object):
 
             result = self._apis.get_common_data(tx_code, rc_name, repeat, request_name)
 
-            # 실제로 사용하는 서버측에서 데이터 get해서 관련 데이터 추가로 가공한다.
             REDIS_SERVER.set(RedisKeys.TX_DATA, result)
 
         def get_chejan_data(self):
