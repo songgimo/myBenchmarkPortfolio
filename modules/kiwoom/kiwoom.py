@@ -72,7 +72,7 @@ class KiwoomAPIModule(QObject, Process):
 
             result = fn()
 
-            REDIS_SERVER.set(RedisKeys.KIWOOM_RESULT_KEY, result)
+            REDIS_SERVER.set(RedisKeys.COM_TO_MODULE_RESULT_KEY, result)
 
     def connect_all_block(self):
         for name, fn in inspect.getmembers(self, inspect.ismethod):
