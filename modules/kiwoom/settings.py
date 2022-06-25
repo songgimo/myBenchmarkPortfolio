@@ -40,6 +40,8 @@ class CustomScreenNumbers:
     REAL_STOCK_FILLED = ''
     CONDITION = ''
 
+    GET_ALL_STOCK_KOREAN_NAME = 9999
+
 
 class SetRealReg:
     ONLY_LAST_REGISTRY = '0'
@@ -50,8 +52,8 @@ class SetRealReg:
 
 
 class IsRepeat:
-    USED = 2
-    UNUSED = 0
+    YES = 2
+    NO = 0
 
 
 class Trading:
@@ -78,8 +80,8 @@ class ResultStatus:
 
 
 class StockCodes:
-    ALL_KOSPI = '0'
-    ALL_KOSDAQ = '10'
+    KOSPI = '0'
+    KOSDAQ = '10'
 
 
 class NTypes:
@@ -98,11 +100,18 @@ class ValueName:
     BID_PRICE = '매수가격'
 
 
-class CustomItemName:
+class ItemName:
     STOCK_NAME = '종목명'
+    STOCK_CODE = '종목코드'
+    BULK_STOCK_NAME = '대량종목명'
     HIGHEST_PRICE = '상한가'
     OPENING_PRICE = '시가'
     CURRENT_PRICE = '현재가'
+
+    CURRENT_AMOUNT = '보유수량'
+    CURRENT_ACCOUNT_INFO = '계좌평가현황요청'
+
+    STOCKS_HMWD = '주식일주월시'
 
     NAME_LIST = [STOCK_NAME, HIGHEST_PRICE, OPENING_PRICE, CURRENT_PRICE]
 
@@ -112,6 +121,7 @@ class Commands:
     GET_STOCK_OPENING_PRICE = 'get_stock_opening_price'
     GET_STOCK_HIGHEST_PRICE = 'get_stock_highest_price'
     GET_STOCK_CURRENT_PRICE = 'get_stock_current_price'
+    GET_ALL_KOREAN_STOCK_CODE = 'get_all_korean_stock_code'
 
     CONNECT_ALL_BLOCK = 'connect_all_block'
     CONNECT_ALL_REAL = 'connect_all_real'
