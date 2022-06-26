@@ -99,17 +99,26 @@ class ValueName:
     EXCEPT_DELISTING = '상장폐지조회구분'
     BID_PRICE = '매수가격'
 
+    FIXED_STOCK_PRICE = '수정주가구분'
+
 
 class ItemName:
     STOCK_NAME = '종목명'
     STOCK_CODE = '종목코드'
     BULK_STOCK_NAME = '대량종목명'
-    HIGHEST_PRICE = '상한가'
+
+    DATE = '일자'
+    UPPER_LIMIT_PRICE = '상한가'
+
     OPENING_PRICE = '시가'
     CURRENT_PRICE = '현재가'
 
+    LOWEST_PRICE = '저가'
+    HIGHEST_PRICE = '고가'
+
     CURRENT_AMOUNT = '보유수량'
     CURRENT_ACCOUNT_INFO = '계좌평가현황요청'
+    DAILY_STOCK_PRICE = '주식일봉차트조회요청'
 
     STOCKS_HMWD = '주식일주월시'
 
@@ -122,6 +131,8 @@ class Commands:
     GET_STOCK_HIGHEST_PRICE = 'get_stock_highest_price'
     GET_STOCK_CURRENT_PRICE = 'get_stock_current_price'
     GET_ALL_KOREAN_STOCK_CODE = 'get_all_korean_stock_code'
+    GET_ALL_DAILY_THREAD = 'get_all_daily_thread'
+    GET_ALL_DAILY_CANDLE = 'get_all_daily_candle'
 
     CONNECT_ALL_BLOCK = 'connect_all_block'
     CONNECT_ALL_REAL = 'connect_all_real'
