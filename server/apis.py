@@ -13,9 +13,9 @@ class KiwoomApiService(object):
         self.set_and_get_result(Commands.CONNECT_ALL_REAL)
 
     def set_and_get_result(self, command):
-        REDIS_SERVER.set(RedisKeys.KIWOOM_API_KEY, command)
+        REDIS_SERVER.set(RedisKeys.Kiwoom.KIWOOM_API_KEY, command)
         try:
-            return REDIS_SERVER.get(RedisKeys.COM_TO_MODULE_RESULT_KEY)
+            return REDIS_SERVER.get(RedisKeys.Kiwoom.COM_TO_MODULE_RESULT_KEY)
         except:
             return dict()
 
