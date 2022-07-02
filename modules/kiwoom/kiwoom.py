@@ -2,6 +2,7 @@ import inspect
 import re
 import time
 import random
+import datetime
 import queue
 
 from multiprocessing import Process
@@ -158,36 +159,6 @@ class KiwoomAPIModule(QObject, Process):
     def get_kosdaq_code_list(self):
         return self._apis.get_code_list_by_markets(StockCodes.KOSDAQ)
 
-    def get_all_daily_thread(self, code, latest_date, input_date, is_repeat):
-        def get_stocks_daily_candle_not_entered(ds, date):
-            for n, data in enumerate(ds):
-                if date in data:
-                    # 오늘 제외, 전날부터 미입력 값 넣어야 함.
-                    # 최대 600일전까지 나오는데, 그정도로 값이 갱신이 안되진 않을 것이라고 판단함.
-                    return ds[:n]
-
-        total_data_set = list()
-        while True:
-            self.get_all_daily_candle(code, latest_date.strftime('%Y%m%d'), is_repeat)
-            is_repeat, data_set = get_redis()
-            if input_date:
-                # 기존 데이터가 있는 경우, 1회 데이터 추가
-                not_entered = get_stocks_daily_candle_not_entered(data_set, input_date[0][0])
-                if not_entered:
-                    total_data_set += not_entered
-                break
-            else:
-                # 반복시 마지막 날짜를 기준으로 가져오므로
-                if is_repeat is False:
-                    # 반복상태가 아닌 경우 break해서 수집종료
-                    total_data_set += data_set
-                    break
-                else:
-                    total_data_set += data_set[:-1]
-                time.sleep(random.randrange(200, 4000) / 1000)
-
-        set_redis()
-
 
 class Receiver(object):
     def __init__(self, apis, local_queue):
@@ -215,15 +186,26 @@ class Receiver(object):
                     "parameter": parameter
                 }
 
+        def get_repeat_data(self, request_name, tx_code, items):
+            repeat_count = self._apis.get_repeat_count(tx_code, request_name)
+
+            total_ = []
+            for i in range(repeat_count):
+                dict_ = dict()
+                for key, item_name in items:
+                    dict_[key] = self._apis.get_common_data_with_repeat(tx_code, request_name, i, item_name)
+                total_.append(dict_)
+
+            return total_
+
         def get_tx_data(self, *args):
             screen_number, request_name, tx_code, rc_name, repeat, d_len, error_code, message, sp_message = args
 
             item_name, parameter = self.get_data_by_request_name(request_name)
+            item_dict = dict()
             if not parameter:
                 result = self._apis.get_common_data(tx_code, rc_name, repeat, item_name)
             else:
-                repeat_count = self._apis.get_repeat_count(tx_code, request_name)
-                total = dict()
                 if item_name == ItemName.BULK_STOCK_NAME:
                     items = (('code', ItemName.STOCK_NAME),)
 
@@ -234,24 +216,29 @@ class Receiver(object):
                     pass
 
                 elif item_name == ItemName.DAILY_STOCK_PRICE:
-                    for i in range(repeat_count):
-                        items = (
-                             ('date', ItemName.DATE),
-                             ('close', ItemName.CURRENT_PRICE),
-                             ('open', ItemName.OPENING_PRICE),
-                             ('high', ItemName.HIGHEST_PRICE),
-                             ('low', ItemName.LOWEST_PRICE),
-                         )
-                        date_timestamp = datetime.datetime.strptime(date, '%Y%m%d').timestamp() * 1000
-                        data_set.append([date_timestamp, open_, high, low, close])
-                    else:
-                        self._service_q[rq_name].put((False, data_set))
+                    items = (
+                        ('date', ItemName.DATE),
+                        ('close', ItemName.CURRENT_PRICE),
+                        ('open', ItemName.OPENING_PRICE),
+                        ('high', ItemName.HIGHEST_PRICE),
+                        ('low', ItemName.LOWEST_PRICE),
+                    )
 
-                    self._local_queue.put()
+                    repeat_data = self.get_repeat_data(request_name, tx_code, items)
 
-                for each in range(repeat_count):
-                    for key, item_name in items:
-                        total[key] = self._apis.get_common_data_with_repeat(tx_code, request_name, item_name)
+                    total = []
+                    for each in repeat_data:
+                        date_timestamp = datetime.datetime.strptime(
+                            each['date'], '%Y%m%d'
+                        ).timestamp() * 1000
+                        total.append([
+                            date_timestamp,
+                            each['open'],
+                            each['high'],
+                            each['low'],
+                            each['close'],
+                        ])
+
             result = {
                 "repeat": int(repeat),
                 "total": total
