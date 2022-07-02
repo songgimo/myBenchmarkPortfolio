@@ -31,8 +31,6 @@ class KiwoomApiService(object):
     def get_stocks_daily_candle_not_entered(self, data_set, date):
         for n, data in enumerate(data_set):
             if date in data:
-                # 오늘 제외, 전날부터 미입력 값 넣어야 함.
-                # 최대 600일전까지 나오는데, 그정도로 값이 갱신이 안되진 않을 것이라고 판단함.
                 return data_set[:n]
 
     def get_all_daily_candle_by_stock_code(self, stock_code, latest_date):

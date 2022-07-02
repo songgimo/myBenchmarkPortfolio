@@ -202,9 +202,8 @@ class Receiver(object):
             screen_number, request_name, tx_code, rc_name, repeat, d_len, error_code, message, sp_message = args
 
             item_name, parameter = self.get_data_by_request_name(request_name)
-            item_dict = dict()
             if not parameter:
-                result = self._apis.get_common_data(tx_code, rc_name, repeat, item_name)
+                total = self._apis.get_common_data(tx_code, rc_name, repeat, item_name)
             else:
                 if item_name == ItemName.BULK_STOCK_NAME:
                     items = (('code', ItemName.STOCK_NAME),)
