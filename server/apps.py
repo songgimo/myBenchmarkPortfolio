@@ -2,9 +2,6 @@ from flask import Flask
 from flask_cors import CORS, cross_origin
 from flask_restful import Api
 
-from Util.pyinstaller_patch import *
-
-from KiwoomHighChart.api import GetDailyCandle, GetStockIndicators, PutStockIndicators
 
 app = Flask(__name__)
 api = Api()
