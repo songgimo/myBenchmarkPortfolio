@@ -5,7 +5,6 @@ from server.queries import GetQueries
 
 from win32com import client
 
-import threading
 import datetime
 
 
