@@ -53,7 +53,7 @@ class DynamicApis(object):
         return self._dynamic_call('GetRepeatCnt(QString, QString)', [tx_code, request_name])
 
 
-class KiwoomAPIModule(QObject, Process):
+class KiwoomAPIModule(Process):
     def __init__(self, controller):
         super(KiwoomAPIModule, self).__init__()
 
@@ -110,13 +110,13 @@ class KiwoomAPIModule(QObject, Process):
         return get_redis(key)
 
     def connect_block_tx_data(self):
-        self.OnReceiveTrData.connect(self._receiver.blocking.get_tx_data)
+        self._controller.OnReceiveTrData.connect(self._receiver.blocking.get_tx_data)
 
     def connect_block_chejan_data(self):
-        self.OnReceiveChejanData.connect(self._receiver.real.get_tx_data)
+        self._controller.OnReceiveChejanData.connect(self._receiver.real.get_tx_data)
 
     def connect_block_message_data(self):
-        self.OnReceiveMsg.connect(self._receiver.blocking.get_message)
+        self._controller.OnReceiveMsg.connect(self._receiver.blocking.get_message)
 
     def get_stock_code_information(self, stock_code, item_name):
         self._apis.set_value(ValueName.STOCK_CODE, stock_code)
@@ -135,10 +135,7 @@ class KiwoomAPIModule(QObject, Process):
         self._apis.set_value(ValueName.BASE_DATE, date)
         self._apis.set_value(ValueName.FIXED_STOCK_PRICE, 1)
 
-        if self.set_auto_screen:
-            self._auto_screen_setter()
-
-        self._apis.request_common_data(request_name, OptCodes.DAILY_CHART, self._auto_screen_number, repeat)
+        self._apis.request_common_data(request_name, OptCodes.DAILY_CHART, '', repeat)
 
     def get_stock_korean_name(self, stock_code):
         return self.get_stock_code_information(stock_code, ItemName.STOCK_NAME)
