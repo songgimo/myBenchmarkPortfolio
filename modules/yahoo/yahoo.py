@@ -7,7 +7,7 @@ class YahooFinanceAPI(object):
     def __init__(self):
         super(YahooFinanceAPI, self).__init__()
 
-    def validate_parameter(self, parameter):
+    def __validate_parameter(self, parameter):
         symbols = parameter.get('symbols')
         if symbols:
             if not isinstance(str, symbols):
@@ -18,11 +18,11 @@ class YahooFinanceAPI(object):
 
         return True, parameter, ''
 
-    def get_request(self, path, parameter=None):
+    def _get_request(self, path, parameter=None):
         if parameter is None:
             parameter = dict()
 
-        is_valid, parameter, message = self.validate_parameter(parameter)
+        is_valid, parameter, message = self.__validate_parameter(parameter)
 
         if not is_valid:
             raise
@@ -42,4 +42,4 @@ class YahooFinanceAPI(object):
             "range": range_,
             "symbols": symbols
         }
-        return self.get_request(Urls.SPARK, parameters)
+        return self._get_request(Urls.SPARK, parameters)
