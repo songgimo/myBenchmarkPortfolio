@@ -60,7 +60,7 @@ class YahooFinanceAPI(object):
 
         return self.__get_request(Urls.QUOTE, parameter)
 
-    def get_bulk_close_history(self, interval, range_, symbols):
+    def get_close_history(self, interval, range_, symbols):
         parameter = {
             "interval": interval,
             "range": range_,
@@ -93,3 +93,13 @@ class YahooFinanceAPI(object):
             data_by_symbol[symbol] = decimal.Decimal(each["trailingAnnualDividendYield"])
 
         return data_by_symbol
+
+    def get_stock_sector(self):
+        "Technology, HealthCare, Consumer Discretionary 등등"
+
+    def get_and_calculate_stock_type(self):
+        """
+            소형, 중형, 대형
+            성장주, 가치주
+            주가수익비율(PER), 주가순자산비율(PBR), 주가매출액비율(PSR), 배당수익률 등 4가지 전통적 평가 방식으로 계산 및 결정
+        """
