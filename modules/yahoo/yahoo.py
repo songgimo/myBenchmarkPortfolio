@@ -97,7 +97,7 @@ class YahooFinanceAPI(object):
     def get_stock_sector(self):
         "Technology, HealthCare, Consumer Discretionary 등등"
 
-    def get_and_calculate_stock_type(self):
+    def get_and_calculate_stock_type(self, per, pbr, psr, dividend_per):
         """
             소형, 중형, 대형
             성장주, 가치주
