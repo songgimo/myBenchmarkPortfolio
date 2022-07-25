@@ -31,14 +31,19 @@ class GetChart(Resource):
         args = request.args
         print(list(args))
         code_name = args.get("code")
+        code_name = json.loads(code_name)
         print(code_name)
         last_three_years = datetime.datetime.now() - datetime.timedelta(days=365*3)
         yf = yfinance.download(code_name, last_three_years.strftime("%Y-%m-%d"))
 
         axes_for_timestamp = [axes.timestamp() * 1000 for axes in yf.axes[0]]
-        zip_for_close = list(zip(axes_for_timestamp, list(yf.Close)))
 
-        return Result(True, zip_for_close, None).to_dict()
+        total = []
+        for code in code_name:
+            zip_for_close = list(zip(axes_for_timestamp, list(yf.Close.get(code))))
+            total.append({"code": code, "data": zip_for_close})
+
+        return Result(True, total, None).to_dict()
 
 #
 # class GetDailyCandle(Resource):

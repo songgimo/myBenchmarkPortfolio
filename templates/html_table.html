@@ -62,11 +62,11 @@
     function HighChartAjax() {
 // test url code
     var url = 'http://127.0.0.1:5000/api/v0/get/last-three-years-chart';
-    var code = 'AAPL';
+    var code = ['AAPL', 'DRIV'];
     /* stock_code, candle_date, open, high, low, close **/
     $.ajax({
         url: url,
-        data: {'code': code},
+        data: {'code': JSON.stringify(code)},
         type: 'GET',
         async: false,
         error: function (error) {
@@ -83,94 +83,14 @@
         })
     })
 }
-function addPopupEvents(chart) {
-    var closePopupButtons = document.getElementsByClassName('highcharts-close-popup');
-    // Close popup button:
-    Highcharts.addEvent(
-        closePopupButtons[0],
-        'click',
-        function () {
-            this.parentNode.style.display = 'none';
-        }
-    );
-
-    Highcharts.addEvent(
-        closePopupButtons[1],
-        'click',
-        function () {
-            this.parentNode.style.display = 'none';
-        }
-    );
-
-    // Update an annotaiton from popup
-    Highcharts.addEvent(
-        document.querySelectorAll('.highcharts-popup-annotations button')[0],
-        'click',
-        function () {
-            var strokeWidth = parseInt(
-                document.querySelectorAll(
-                    '.highcharts-popup-annotations input[name="stroke-width"]'
-                )[0].value,
-                10
-                ),
-                strokeColor = document.querySelectorAll(
-                    '.highcharts-popup-annotations input[name="stroke"]'
-                )[0].value;
-
-            // Stock/advanced annotations have common options under typeOptions
-            if (chart.currentAnnotation.options.typeOptions) {
-                chart.currentAnnotation.update({
-                    typeOptions: {
-                        lineColor: strokeColor,
-                        lineWidth: strokeWidth,
-                        line: {
-                            strokeWidth: strokeWidth,
-                            stroke: strokeColor
-                        },
-                        background: {
-                            strokeWidth: strokeWidth,
-                            stroke: strokeColor
-                        },
-                        innerBackground: {
-                            strokeWidth: strokeWidth,
-                            stroke: strokeColor
-                        },
-                        outerBackground: {
-                            strokeWidth: strokeWidth,
-                            stroke: strokeColor
-                        },
-                        connector: {
-                            strokeWidth: strokeWidth,
-                            stroke: strokeColor
-                        }
-                    }
-                });
-            } else {
-                // Basic annotations:
-                chart.currentAnnotation.update({
-                    shapes: [{
-                        'stroke-width': strokeWidth,
-                        stroke: strokeColor
-                    }],
-                    labels: [{
-                        borderWidth: strokeWidth,
-                        borderColor: strokeColor
-                    }]
-                });
-            }
-            chart.stockToolbar.annotationsPopupContainer.style.display = 'none';
-        }
-    );
-}
 function SetHighChart(data) {
     // split the data set into ohlc and volume
     let candle = data;
-    let ohlc = [],
-        series = [],
+    let series = [],
         candleLength = candle.length,
         i = 0;
 
-    var stock_kor = '기아차';
+    var stock_kor = 'AAPL';
     if (candleLength === 0){
         $('#main-chart').css('display', 'none');
         return
@@ -178,27 +98,24 @@ function SetHighChart(data) {
         $('#main-chart').css('display', 'block')
     }
     for (i; i < candleLength; i += 1) {
-        ohlc.push([
-            candle[i][0], // the date
-            candle[i][1], // close
-            '', // close
-            '', // close
-        ]);
+        console.log(candle[i])
+        let detailLength = candle[i].data.length,
+            closeData = [],
+            j = 0;
+        for (j; j< detailLength; j += 1) {
+            closeData.push([
+                candle[i].data[j][0], // the date
+                candle[i].data[j][1], // close
+            ]);
+        }
+        console.log(closeData)
+        series.push({
+            name: candle[i].code,
+            data: closeData
+        });
     }
-    series.push({
-        type: 'candlestick',
-        id: 'ohlc',
-        name: stock_kor,
-        data: ohlc
-    });
+    console.log(series)
     Highcharts.stockChart('container', {
-        chart: {
-            events: {
-                load: function () {
-                    addPopupEvents(this);
-                }
-            }
-        },
         yAxis: {
             minPadding:0,
             maxPadding:0,
