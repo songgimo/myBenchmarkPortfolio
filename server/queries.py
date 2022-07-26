@@ -7,17 +7,33 @@ class SetQueries(object):
         query = """
             CREATE TABLE IF NOT EXISTS stock_info (
                 code VARCHAR(16) NOT NULL PRIMARY KEY,
-                name VARCHAR(32) 
+                name VARCHAR(32)
+                sector VARCHAR(32)
+                type VARCHAR(32)
                 date_created DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """.format()
         return execute_db(query)
 
     @staticmethod
-    def price_info():
+    def dividend_history():
         query = """
-            CREATE TABLE IF NOT EXISTS price_info (
-                code VARCHAR(16) NOT NULL,
+            CREATE TABLE IF NOT EXISTS dividend_history (
+                code VARCHAR(16) NOT NULL PRIMARY KEY,
+                percent DECIMAL
+                dividend_date TIMESTAMP 
+                date_created DATETIME DEFAULT CURRENT_TIMESTAMP
+                FOREIGN KEY (code) REFERENCES stock_info(code),
+            )
+        """
+
+        return execute_db(query)
+
+    @staticmethod
+    def stock_history():
+        query = """
+            CREATE TABLE IF NOT EXISTS stock_history (
+                code VARCHAR(16) NOT NULL PRIMARY KEY,
                 candle_date bigint NOT NULL,
                 open FLOAT,
                 high FLOAT,
@@ -30,6 +46,18 @@ class SetQueries(object):
         """
 
         return execute_db(query)
+
+    @staticmethod
+    def portfolio_row():
+        query = """
+            CREATE TABLE IF NOT EXISTS stock_history (
+            code VARCHAR(16) NOT NULL PRIMARY KEY,
+            price DECIMAL
+            amount VARCHAR(32)
+            dividend VARCHAR(32)
+            date_created DATETIME DEFAULT CURRENT_TIMESTAMP 
+        """
+        return query
 
 
 class GetQueries(object):

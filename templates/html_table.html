@@ -62,7 +62,7 @@
     function HighChartAjax() {
 // test url code
     var url = 'http://127.0.0.1:5000/api/v0/get/last-three-years-chart';
-    var code = ['AAPL', 'DRIV'];
+    var code = ['AAPL', 'DRIV', "MSFT", "AMZN", "TLT", "PDBC", "XOM", "ITA"];
     /* stock_code, candle_date, open, high, low, close **/
     $.ajax({
         url: url,
@@ -76,7 +76,6 @@
             if (data.success) {
                 SetHighChart(data.data)
             } else {
-                console.log(data)
                 $('#main-chart').css('display', 'none');
             }
 
@@ -98,7 +97,6 @@ function SetHighChart(data) {
         $('#main-chart').css('display', 'block')
     }
     for (i; i < candleLength; i += 1) {
-        console.log(candle[i])
         let detailLength = candle[i].data.length,
             closeData = [],
             j = 0;
@@ -108,13 +106,11 @@ function SetHighChart(data) {
                 candle[i].data[j][1], // close
             ]);
         }
-        console.log(closeData)
         series.push({
             name: candle[i].code,
             data: closeData
         });
     }
-    console.log(series)
     Highcharts.stockChart('container', {
         yAxis: {
             minPadding:0,

@@ -8,6 +8,11 @@ from win32com import client
 import datetime
 
 
+class YahooAPIService(object):
+    def __init__(self):
+        super(YahooAPIService, self).__init__()
+
+
 class KiwoomApiService(object):
     def __init__(self):
         super(KiwoomApiService, self).__init__()
@@ -44,7 +49,7 @@ class KiwoomApiService(object):
                 is_repeat=is_repeat
             )
 
-            input_date = GetQueries.is_exist_table_by_stock_code(stock_code)  # timestamp
+            input_date = GetQueries.is_exists_price_info_by_code(stock_code)  # timestamp
             if input_date:
                 not_entered = self.get_stocks_daily_candle_not_entered(result['total'], input_date[0][0])
                 if not_entered:
