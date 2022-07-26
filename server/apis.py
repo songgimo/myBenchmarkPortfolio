@@ -1,71 +1,69 @@
-from modules.global_settings import REDIS_SERVER, RedisKeys
-from modules.kiwoom.settings import Commands, IsRepeat
-from modules.utils import set_redis, get_redis
-
-from win32com import client
-
-import threading
+import yfinance
 import datetime
+import json
+from flask import request
+from flask_restful import Resource
+
+# 내 주식을 입력 -> 차트에 노출됨 ->
+# 벤치마크 주식을 입력 -> 차트에 노출됨
+# 괴리감 계산
 
 
-class KiwoomApiService(object):
-    def __init__(self):
-        super(KiwoomApiService, self).__init__()
-        self._controller = client.Dispatch("KHOPENAPI.KHOpenAPICtrl.1")
+class Result(object):
+    def __init__(self, success, data, message):
+        self.__success = success
+        self.__data = data
+        self.__message = message
 
-        # connection for getting data.
-        self.set_and_get_result(Commands.CONNECT_ALL_BLOCK)
-        self.set_and_get_result(Commands.CONNECT_ALL_REAL)
-
-    def set_and_get_result(self, command, **kwargs):
-        parameters = {
-            "command": command,
-            "kwargs": kwargs
+    def to_dict(self):
+        return {
+            "success": self.__success,
+            "data": self.__data,
+            "message": self.__message
         }
-        set_redis(RedisKeys.Kiwoom.API_KEY, parameters)
-        try:
-            return get_redis(RedisKeys.Kiwoom.COM_TO_MODULE_RESULT_KEY)
-        except:
-            return dict()
 
-    def get_stocks_daily_candle_not_entered(self, data_set, date):
-        for n, data in enumerate(data_set):
-            if date in data:
-                return data_set[:n]
+    def to_json(self):
+        return json.dumps(self.to_dict())
 
-    def get_all_daily_candle_by_stock_code(self, stock_code, latest_date):
-        is_repeat = IsRepeat.NO
+
+class GetChart(Resource):
+    def get(self):
+        args = request.args
+        print(list(args))
+        code_name = args.get("code")
+        code_name = json.loads(code_name)
+        print(code_name)
+        last_three_years = datetime.datetime.now() - datetime.timedelta(days=365*3)
+        yf = yfinance.download(code_name, last_three_years.strftime("%Y-%m-%d"))
+
+        axes_for_timestamp = [axes.timestamp() * 1000 for axes in yf.axes[0]]
+
         total = []
-        while True:
-            result = self.set_and_get_result(
-                Commands.GET_ALL_DAILY_CANDLE,
-                code=stock_code,
-                latest_date=latest_date,
-                is_repeat=is_repeat
-            )
+        for code in code_name:
+            zip_for_close = list(zip(axes_for_timestamp, list(yf.Close.get(code))))
+            total.append({"code": code, "data": zip_for_close})
 
-            input_date = GetQueries.is_exist_table_by_stock_code(stock_code)  # timestamp
-            if input_date:
-                not_entered = self.get_stocks_daily_candle_not_entered(result['total'], input_date[0][0])
-                if not_entered:
-                    total += not_entered
-                return total
+        return Result(True, total, None).to_dict()
 
-            # 반복시 마지막 날짜를 기준으로 가져오므로
-            if is_repeat == IsRepeat.YES:
-                # 반복 상태가 아닌 경우 수집 종료.
-                total += result['total']
-                return total
-
-            total += result['total'][:-1]
-
-    def get_history_price_all_stocks(self):
-        codes = self.set_and_get_result(Commands.GET_ALL_KOREAN_STOCK_CODE)
-
-        latest_date = (datetime.datetime.now() - datetime.timedelta(days=1))
-        result = dict()
-        for code in codes:
-            total_result = self.get_all_daily_candle_by_stock_code(code, latest_date)
-            result[code] = total_result
-
-        return result
+#
+# class GetDailyCandle(Resource):
+#     def get(self):
+#         args = request.args
+#         stock_code = args.get('stock_code')
+#
+#         candles = GetQueries.all_candle_by_name(stock_code)
+#
+#         if candles:
+#             return {
+#                 "success": False,
+#                 "data": {
+#                     "candles": candles
+#                 },
+#                 "message": ''
+#             }
+#         else:
+#             return {
+#                 "success": False,
+#                 "data": '',
+#                 "message": ''
+#             }

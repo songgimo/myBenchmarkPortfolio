@@ -1,7 +1,8 @@
 from flask import Flask
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from flask_restful import Api
 
+from server.apis import GetChart
 
 app = Flask(__name__)
 api = Api()
@@ -9,10 +10,7 @@ api = Api()
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-api.add_resource(GetDailyCandle, '/api/v0/get/daily-candle')
-
-api.add_resource(GetStockIndicators, '/api/v0/get/indicators')
-api.add_resource(PutStockIndicators, '/api/v0/put/indicators')
+api.add_resource(GetChart, '/api/v0/get/last-three-years-chart')
 api.init_app(app)
 
 

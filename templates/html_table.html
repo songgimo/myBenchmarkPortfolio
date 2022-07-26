@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<link rel="stylesheet" type="text/css" href="https://code.highcharts.com/css/annotations/popup.css">
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<script src="https://code.highcharts.com/stock/modules/data.js"></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.4.js"></script>
+
+<script src="https://code.highcharts.com/stock/modules/drag-panes.js"></script>
+
+<script src="https://code.highcharts.com/stock/indicators/indicators.js"></script>
+
+<script src="https://code.highcharts.com/stock/modules/annotations-advanced.js"></script>
+
+<script src="https://code.highcharts.com/stock/modules/full-screen.js"></script>
+<script src="https://code.highcharts.com/stock/modules/price-indicator.js"></script>
+<script src="https://code.highcharts.com/stock/modules/stock-tools.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
+
+<div id="main-chart" class="chart-wrapper" style="display: none">
+    <div class="highcharts-popup highcharts-popup-indicators">
+        <span class="highcharts-close-popup">&times;</span>
+        <div class="highcharts-popup-wrapper">
+            <label for="indicator-list">이동평균선</label>
+            <select name="indicator-list">
+                <option value="sma">이동평균선</option>
+            </select>
+            <label for="stroke">기간</label>
+            <input type="text" name="period" value="14"/>
+        </div>
+        <button>추가</button>
+    </div>
+    <div class="highcharts-popup highcharts-popup-annotations">
+        <span class="highcharts-close-popup">&times;</span>
+        <div class="highcharts-popup-wrapper">
+            <label for="stroke">색상</label>
+            <input type="text" name="stroke" />
+            <label for="stroke-width">넓이</label>
+            <input type="text" name="stroke-width" />
+        </div>
+        <button>저장</button>
+    </div>
+    <div class="highcharts-stocktools-wrapper highcharts-bindings-container highcharts-bindings-wrapper">
+        <div class="highcharts-menu-wrapper">
+            <ul class="highcharts-stocktools-toolbar stocktools-toolbar">
+                <li class="highcharts-indicators" title="이동평균선">
+                    <span class="highcharts-menu-item-btn"></span>
+                    <span class="highcharts-menu-item-title">이동평균선</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div id="container" class="chart" style="width: 100% !important; position:relative; right: 31px"></div>
+</div>
+
+<script>
+    HighChartAjax()
+    function HighChartAjax() {
+// test url code
+    var url = 'http://127.0.0.1:5000/api/v0/get/last-three-years-chart';
+    var code = ['AAPL', 'DRIV', "MSFT", "AMZN", "TLT", "PDBC", "XOM", "ITA"];
+    /* stock_code, candle_date, open, high, low, close **/
+    $.ajax({
+        url: url,
+        data: {'code': JSON.stringify(code)},
+        type: 'GET',
+        async: false,
+        error: function (error) {
+            console.log(error)
+        },
+        success: (function (data) {
+            if (data.success) {
+                SetHighChart(data.data)
+            } else {
+                $('#main-chart').css('display', 'none');
+            }
+
+        })
+    })
+}
+function SetHighChart(data) {
+    // split the data set into ohlc and volume
+    let candle = data;
+    let series = [],
+        candleLength = candle.length,
+        i = 0;
+
+    var stock_kor = 'AAPL';
+    if (candleLength === 0){
+        $('#main-chart').css('display', 'none');
+        return
+    } else {
+        $('#main-chart').css('display', 'block')
+    }
+    for (i; i < candleLength; i += 1) {
+        let detailLength = candle[i].data.length,
+            closeData = [],
+            j = 0;
+        for (j; j< detailLength; j += 1) {
+            closeData.push([
+                candle[i].data[j][0], // the date
+                candle[i].data[j][1], // close
+            ]);
+        }
+        series.push({
+            name: candle[i].code,
+            data: closeData
+        });
+    }
+    Highcharts.stockChart('container', {
+        yAxis: {
+            minPadding:0,
+            maxPadding:0,
+            gridLineColor:'rgba(204,204,204,.25)',
+            gridLineWidth:0.5,
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }],
+        },
+        legend: {
+            enabled: true,
+            layout: 'vertical',
+            align: 'left',
+            verticalAlign: 'middle',
+            itemMarginBottom: 0,
+            maxHeight: 600,
+            borderWidth: 0
+        },
+        navigationBindings: {
+            events: {
+                selectButton: function (event) {
+                    var newClassName = event.button.className + ' highcharts-active',
+                        topButton = event.button.parentNode.parentNode;
+
+                    if (topButton.classList.contains('right')) {
+                        newClassName += ' right';
+                    }
+
+                    // If this is a button with sub buttons,
+                    // change main icon to the current one:
+                    if (!topButton.classList.contains('highcharts-menu-wrapper')) {
+                        topButton.className = newClassName;
+                    }
+
+                    // Store info about active button:
+                    this.chart.activeButton = event.button;
+                },
+                deselectButton: function (event) {
+                    event.button.parentNode.parentNode.classList.remove('highcharts-active');
+
+                    // Remove info about active button:
+                    this.chart.activeButton = null;
+                },
+                showPopup: function (event) {
+
+                    if (!this.indicatorsPopupContainer) {
+                        this.indicatorsPopupContainer = document
+                            .getElementsByClassName('highcharts-popup-indicators')[0];
+                    }
+
+                    if (!this.annotationsPopupContainer) {
+                        this.annotationsPopupContainer = document
+                            .getElementsByClassName('highcharts-popup-annotations')[0];
+                    }
+
+                    if (event.formType === 'indicators') {
+                        this.indicatorsPopupContainer.style.display = 'block';
+                    } else if (event.formType === 'annotation-toolbar') {
+                        // If user is still adding an annotation, don't show popup:
+                        if (!this.chart.activeButton) {
+                            this.chart.currentAnnotation = event.annotation;
+                            this.annotationsPopupContainer.style.display = 'block';
+                        }
+                    }
+
+                },
+                closePopup: function () {
+                    this.indicatorsPopupContainer.style.display = 'none';
+                    this.annotationsPopupContainer.style.display = 'none';
+                }
+            }
+        },
+        stockTools: {
+            gui: {
+                enabled: false
+            }
+        },
+        series: series,
+        responsive: {
+            rules: [{
+                condition: {
+                    maxWidth: 800
+                },
+                chartOptions: {
+                    rangeSelector: {
+                        inputEnabled: false
+                    }
+                }
+            }]
+        }
+    });
+}
+</script>
